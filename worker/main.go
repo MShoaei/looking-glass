@@ -20,6 +20,11 @@ type Runner interface {
 }
 
 func main() {
+	api := registerAPI()
+	api.Run(iris.Addr(":8080"), iris.WithoutServerError(iris.ErrServerClosed))
+}
+
+func registerAPI() *iris.Application {
 	api := iris.Default()
 	j := jwt.New(jwt.Config{
 		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
@@ -39,9 +44,8 @@ func main() {
 	api.Post("/disable/{plugin:string}", disablePluginHandler)
 
 	// /execute accept URL parameters as arguments to commands
-	api.Post("/execute", executeHandler)
-
-	api.Run(iris.Addr(":8080"), iris.WithoutServerError(iris.ErrServerClosed))
+	api.Post("/execute{plugin:string}", executeHandler)
+	return api
 }
 
 func loginHandler(context iris.Context) {
