@@ -14,9 +14,10 @@ var secret []byte
 
 // Runner interface is the interface that plugins should implement
 type Runner interface {
-	Run(params ...string) (stdout io.Writer, stderr io.Writer, err error)
+	Run(stdout io.Writer, stderr io.Writer, params ...string) error
 	Disable()
 	Enable()
+	Status() bool
 }
 
 func main() {
