@@ -36,15 +36,14 @@ func registerAPI() *iris.Application {
 
 	api.Use(j.Serve)
 	api.Get("/home", homeHandler)
-	api.Get("/status", statusHandler)
+	api.Get("/status/{plugin:string}", statusHandler)
 
 	// routes to disable or enable a plugin since go plugin package
 	// doesn't support unloading.
 	api.Post("/enable/{plugin:string}", enablePluginHandler)
 	api.Post("/disable/{plugin:string}", disablePluginHandler)
 
-	// /execute accept URL parameters as arguments to commands
-	api.Post("/execute{plugin:string}", executeHandler)
+	api.Post("/execute/{plugin:string}", executeHandler)
 	return api
 }
 
