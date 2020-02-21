@@ -13,6 +13,7 @@ import (
 )
 
 var secret []byte
+var port string
 
 // Runner interface is the interface that plugins should implement
 type Runner interface {
@@ -24,7 +25,7 @@ type Runner interface {
 
 func main() {
 	api := registerAPI()
-	api.Run(iris.Addr(":8080"), iris.WithoutServerError(iris.ErrServerClosed))
+	api.Run(iris.Addr(port), iris.WithoutServerError(iris.ErrServerClosed))
 }
 
 func registerAPI() *iris.Application {
@@ -186,6 +187,10 @@ func init() {
 	secret = []byte(os.Getenv("SECRET"))
 	if len(secret) == 0 {
 		secret = []byte(`YX<_RDS'K%"qOWDy*z*|rKDn&0|k<8`)
+	}
+	port = ":8080"
+	if p := os.Getenv("PORT"); p != "" {
+		port = ":" + p
 	}
 
 }
