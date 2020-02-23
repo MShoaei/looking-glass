@@ -135,7 +135,7 @@ func disablePluginHandler(context iris.Context) {
 	if err != nil {
 		panic(err)
 	}
-	r.(Runner).Enable()
+	r.(Runner).Disable()
 	context.JSON(iris.Map{
 		"success": true,
 	})
