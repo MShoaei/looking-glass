@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"plugin"
+	"strings"
 	"time"
 
 	"github.com/iris-contrib/middleware/jwt"
@@ -14,7 +15,7 @@ import (
 
 var secret []byte
 var port string
-var workerTags []string
+var workerTags = make([]string, 0)
 
 // Runner interface is the interface that plugins should implement
 type Runner interface {
@@ -200,6 +201,7 @@ func getTagsHandler(context iris.Context) {
 
 func addTagHandler(context iris.Context) {
 	t := context.Params().GetString("tag")
+	t = strings.TrimSpace(t)
 	if t == "" {
 		context.StatusCode(iris.StatusBadRequest)
 		context.JSON(iris.Map{
@@ -232,6 +234,7 @@ func addTagHandler(context iris.Context) {
 
 func deleteTagHandler(context iris.Context) {
 	t := context.Params().GetString("tag")
+	t = strings.TrimSpace(t)
 	if t == "" {
 		context.StatusCode(iris.StatusBadRequest)
 		context.JSON(iris.Map{
@@ -250,7 +253,7 @@ func deleteTagHandler(context iris.Context) {
 	if !success {
 		context.StatusCode(iris.StatusNotFound)
 		context.JSON(iris.Map{
-			"message": fmt.Sprintf("tag \"%s\" not found", t),
+			"error": fmt.Sprintf("tag \"%s\" not found", t),
 		})
 		return
 	}
