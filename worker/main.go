@@ -55,7 +55,7 @@ func registerAPI() *iris.Application {
 
 	api.Get("/tags", getTagsHandler)
 	api.Put("/tags/{tag:string}", addTagHandler)
-	api.Delete("/tags/{tag:string}", deleteTaghandler)
+	api.Delete("/tags/{tag:string}", deleteTagHandler)
 	return api
 }
 
@@ -230,7 +230,7 @@ func addTagHandler(context iris.Context) {
 	})
 }
 
-func deleteTaghandler(context iris.Context) {
+func deleteTagHandler(context iris.Context) {
 	t := context.Params().GetString("tag")
 	if t == "" {
 		context.StatusCode(iris.StatusBadRequest)
