@@ -14,6 +14,7 @@ import (
 
 var secret []byte
 var port string
+var workerTags []string
 
 // Runner interface is the interface that plugins should implement
 type Runner interface {
@@ -39,6 +40,9 @@ func registerAPI() *iris.Application {
 	api.Post("/login", loginHandler)
 
 	api.Use(j.Serve)
+	api.Get("/", func(context iris.Context) {
+		context.Redirect("/home")
+	})
 	api.Get("/home", homeHandler)
 	api.Get("/status/{plugin:string}", statusHandler)
 
@@ -48,6 +52,10 @@ func registerAPI() *iris.Application {
 	api.Post("/disable/{plugin:string}", disablePluginHandler)
 
 	api.Post("/execute/{plugin:string}", executeHandler)
+
+	api.Get("/tags", getTagsHandler)
+	api.Put("/tags/{tag:string}", addTagHandler)
+	api.Delete("/tags/{tag:string}", deleteTaghandler)
 	return api
 }
 
@@ -71,7 +79,7 @@ func loginHandler(context iris.Context) {
 
 func homeHandler(context iris.Context) {
 	context.JSON(iris.Map{
-		"message": "success",
+		"message": "Welcome Home!",
 	})
 }
 
@@ -183,6 +191,72 @@ func executeHandler(context iris.Context) {
 	r.(Runner).Run(context.ResponseWriter(), context.ResponseWriter(), params.Params...)
 }
 
+func getTagsHandler(context iris.Context) {
+	context.StatusCode(iris.StatusOK)
+	context.JSON(iris.Map{
+		"tags": workerTags,
+	})
+}
+
+func addTagHandler(context iris.Context) {
+	t := context.Params().GetString("tag")
+	if t == "" {
+		context.StatusCode(iris.StatusBadRequest)
+		context.JSON(iris.Map{
+			"error": "empty tag is not allowed",
+		})
+		return
+	}
+
+	exists := false
+	for _, tag := range workerTags {
+		if tag == t {
+			exists = true
+			break
+		}
+	}
+	if exists {
+		context.StatusCode(iris.StatusOK)
+		context.JSON(iris.Map{
+			"message": fmt.Sprintf("tag \"%s\" already exists", t),
+		})
+		return
+	}
+
+	workerTags = append(workerTags, t)
+	context.StatusCode(iris.StatusCreated)
+	context.JSON(iris.Map{
+		"message": fmt.Sprintf("tag \"%s\" added", t),
+	})
+}
+
+func deleteTaghandler(context iris.Context) {
+	t := context.Params().GetString("tag")
+	if t == "" {
+		context.StatusCode(iris.StatusBadRequest)
+		context.JSON(iris.Map{
+			"error": "empty tag is not allowed",
+		})
+		return
+	}
+	success := false
+	for i, tag := range workerTags {
+		if tag != t {
+			continue
+		}
+		workerTags = append(workerTags[:i], workerTags[i+1:]...)
+		success = true
+	}
+	if !success {
+		context.StatusCode(iris.StatusNotFound)
+		context.JSON(iris.Map{
+			"message": fmt.Sprintf("tag \"%s\" not found", t),
+		})
+		return
+	}
+	context.StatusCode(iris.StatusNoContent)
+}
+
 func init() {
 	secret = []byte(os.Getenv("SECRET"))
 	if len(secret) == 0 {
@@ -192,5 +266,4 @@ func init() {
 	if p := os.Getenv("PORT"); p != "" {
 		port = ":" + p
 	}
-
 }
