@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
-	"plugin"
-	"strings"
 	"time"
 
 	"github.com/iris-contrib/middleware/jwt"
@@ -45,18 +42,17 @@ func registerAPI() *iris.Application {
 		context.Redirect("/home")
 	})
 	api.Get("/home", homeHandler)
-	api.Get("/status/{plugin:string}", statusHandler)
 
-	// routes to disable or enable a plugin since go plugin package
-	// doesn't support unloading.
-	api.Post("/enable/{plugin:string}", enablePluginHandler)
-	api.Post("/disable/{plugin:string}", disablePluginHandler)
+	pluginParty := api.Party("/plugins")
+	pluginParty.Get("/status/{plugin:string}", statusHandler)
+	pluginParty.Post("/enable/{plugin:string}", enablePluginHandler)
+	pluginParty.Post("/disable/{plugin:string}", disablePluginHandler)
+	pluginParty.Post("/execute/{plugin:string}", executeHandler)
 
-	api.Post("/execute/{plugin:string}", executeHandler)
-
-	api.Get("/tags", getTagsHandler)
-	api.Put("/tags/{tag:string}", addTagHandler)
-	api.Delete("/tags/{tag:string}", deleteTagHandler)
+	tagsParty := api.Party("/tags")
+	tagsParty.Get("/", getTagsHandler)
+	tagsParty.Put("/{tag:string}", addTagHandler)
+	tagsParty.Delete("/{tag:string}", deleteTagHandler)
 	return api
 }
 
@@ -82,182 +78,6 @@ func homeHandler(context iris.Context) {
 	context.JSON(iris.Map{
 		"message": "Welcome Home!",
 	})
-}
-
-func statusHandler(context iris.Context) {
-	var p *plugin.Plugin
-	var r plugin.Symbol
-	var err error
-
-	name := context.Params().GetString("plugin")
-	p, err = plugin.Open(path.Join(name, name+".so"))
-	if err != nil {
-		panic(err)
-	}
-
-	r, err = p.Lookup("P")
-	if err != nil {
-		panic(err)
-	}
-	s := "disabled"
-	if r.(Runner).Status() {
-		s = "enabled"
-	}
-	context.JSON(iris.Map{
-		"pluginStatus": s,
-	})
-}
-
-func enablePluginHandler(context iris.Context) {
-	var p *plugin.Plugin
-	var r plugin.Symbol
-	var err error
-
-	name := context.Params().GetString("plugin")
-	p, err = plugin.Open(path.Join(name, name+".so"))
-	if err != nil {
-		panic(err)
-	}
-
-	r, err = p.Lookup("P")
-	if err != nil {
-		panic(err)
-	}
-	r.(Runner).Enable()
-	context.JSON(iris.Map{
-		"success": true,
-	})
-}
-
-func disablePluginHandler(context iris.Context) {
-	var p *plugin.Plugin
-	var r plugin.Symbol
-	var err error
-
-	name := context.Params().GetString("plugin")
-	p, err = plugin.Open(path.Join(name, name+".so"))
-	if err != nil {
-		panic(err)
-	}
-
-	r, err = p.Lookup("P")
-	if err != nil {
-		panic(err)
-	}
-	r.(Runner).Disable()
-	context.JSON(iris.Map{
-		"success": true,
-	})
-}
-
-func executeHandler(context iris.Context) {
-	var p *plugin.Plugin
-	var r plugin.Symbol
-	var enabled plugin.Symbol
-	var err error
-	var params struct {
-		Params []string `json:"params"`
-	}
-
-	name := context.Params().GetString("plugin")
-	p, err = plugin.Open(path.Join(name, name+".so"))
-	if err != nil {
-		panic(err)
-	}
-
-	enabled, err = p.Lookup("P")
-	if err != nil {
-		panic(err)
-	}
-	if !enabled.(Runner).Status() {
-		context.StatusCode(iris.StatusNotFound)
-		context.JSON(iris.Map{
-			"error": fmt.Sprintf("plugin %s is disabled.", context.Params().GetString("plugin")),
-		})
-	}
-
-	r, err = p.Lookup("P")
-	if err != nil {
-		panic(err)
-	}
-
-	err = context.ReadJSON(&params)
-	if err != nil {
-		context.StatusCode(iris.StatusBadRequest)
-		context.JSON(iris.Map{
-			"error": fmt.Sprintf("failed to parse request with error: %v", err),
-		})
-		return
-	}
-	r.(Runner).Run(context.ResponseWriter(), context.ResponseWriter(), params.Params...)
-}
-
-func getTagsHandler(context iris.Context) {
-	context.StatusCode(iris.StatusOK)
-	context.JSON(iris.Map{
-		"tags": workerTags,
-	})
-}
-
-func addTagHandler(context iris.Context) {
-	t := context.Params().GetString("tag")
-	t = strings.TrimSpace(t)
-	if t == "" {
-		context.StatusCode(iris.StatusBadRequest)
-		context.JSON(iris.Map{
-			"error": "empty tag is not allowed",
-		})
-		return
-	}
-
-	exists := false
-	for _, tag := range workerTags {
-		if tag == t {
-			exists = true
-			break
-		}
-	}
-	if exists {
-		context.StatusCode(iris.StatusOK)
-		context.JSON(iris.Map{
-			"message": fmt.Sprintf("tag \"%s\" already exists", t),
-		})
-		return
-	}
-
-	workerTags = append(workerTags, t)
-	context.StatusCode(iris.StatusCreated)
-	context.JSON(iris.Map{
-		"message": fmt.Sprintf("tag \"%s\" added", t),
-	})
-}
-
-func deleteTagHandler(context iris.Context) {
-	t := context.Params().GetString("tag")
-	t = strings.TrimSpace(t)
-	if t == "" {
-		context.StatusCode(iris.StatusBadRequest)
-		context.JSON(iris.Map{
-			"error": "empty tag is not allowed",
-		})
-		return
-	}
-	success := false
-	for i, tag := range workerTags {
-		if tag != t {
-			continue
-		}
-		workerTags = append(workerTags[:i], workerTags[i+1:]...)
-		success = true
-	}
-	if !success {
-		context.StatusCode(iris.StatusNotFound)
-		context.JSON(iris.Map{
-			"error": fmt.Sprintf("tag \"%s\" not found", t),
-		})
-		return
-	}
-	context.StatusCode(iris.StatusNoContent)
 }
 
 func init() {
