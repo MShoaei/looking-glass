@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os/exec"
 	"testing"
 
 	"github.com/kataras/iris/v12"
@@ -67,4 +68,11 @@ func Test_registerAPI(t *testing.T) {
 		WithHeader("Authorization",
 			"Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1ODIyMzc4Njh9.8zOJVA7Wb5bHDDa5qqoqQidstgmLnDV2fiUtqhtkaxD4zastBehQZyNWMBFM6C1hsAFg0UK4PNO4Ai6ejvvIqw").
 		Expect().Status(iris.StatusNoContent)
+}
+
+func init() {
+	cmd := exec.Command("sh", "-c", "./run.sh")
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
 }

