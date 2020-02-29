@@ -1,19 +1,25 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"time"
 
+	"github.com/alexedwards/argon2id"
 	"github.com/iris-contrib/middleware/jwt"
+	"github.com/jmoiron/sqlx"
 	"github.com/kataras/iris/v12"
+	_ "github.com/lib/pq"
 )
 
 var secret []byte
 var port string
 var workerTags = make([]string, 0)
+var db *sqlx.DB
 
 // Runner interface is the interface that plugins should implement
 type Runner interface {
@@ -58,7 +64,44 @@ func registerAPI() *iris.Application {
 }
 
 func loginHandler(context iris.Context) {
+	cred := struct {
+		Username string
+		Password string
+	}{}
+
+	if err := context.ReadJSON(&cred); err != nil {
+		context.StatusCode(iris.StatusBadRequest)
+		context.JSON(iris.Map{
+			"error": fmt.Sprintf("failed to parse request with error: %v", err),
+		})
+		return
+	}
+
+	data := struct {
+		ID       int    `db:"id"`
+		Password string `db:"password"`
+	}{}
+	if err := db.Get(&data, "SELECT id, password FROM users WHERE username=$1", cred.Username); err != nil {
+		context.StatusCode(iris.StatusNotFound)
+		context.JSON(iris.Map{
+			"error": "user not found",
+		})
+		return
+	}
+	match, err := argon2id.ComparePasswordAndHash(cred.Password, data.Password)
+	if err != nil {
+		panic(err)
+	}
+	if !match {
+		context.StatusCode(iris.StatusUnauthorized)
+		context.JSON(iris.Map{
+			"error": "incorrect password",
+		})
+		return
+	}
+
 	token := jwt.NewTokenWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
+		"jti": data.ID,
 		"iat": time.Now().Unix(),
 	})
 	signedToken, err := token.SignedString(secret)
@@ -68,6 +111,7 @@ func loginHandler(context iris.Context) {
 			"summary": "there was a problem generating token",
 			"error":   err,
 		})
+		return
 	}
 	context.StatusCode(iris.StatusOK)
 	context.JSON(iris.Map{
@@ -93,5 +137,38 @@ func init() {
 	port = ":8080"
 	if p := os.Getenv("PORT"); p != "" {
 		port = ":" + p
+	}
+
+	user := os.Getenv("DB_USER")
+	if user == "" {
+		user = "test"
+	}
+	password := os.Getenv("DB_PASSWORD")
+	if password == "" {
+		password = "testpassword"
+	}
+	dbname := os.Getenv("DB_NAME")
+	if dbname == "" {
+		dbname = "test_db"
+	}
+	dbport := os.Getenv("DB_PORT")
+	if dbname == "" {
+		dbname = "5432"
+	}
+
+	var (
+		err error
+		i   = 1
+	)
+	for {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(i*2)*time.Second)
+		db, err = sqlx.ConnectContext(ctx, "postgres",
+			fmt.Sprintf("user=%s password=%s dbname=%s port=%s sslmode=disable", user, password, dbname, dbport))
+		if err == nil {
+			break
+		}
+		log.Printf("failed with error: %v", err)
+		i++
+		cancel()
 	}
 }
