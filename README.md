@@ -18,6 +18,8 @@ Plugin's initial state(enabled/disabled) is up to the author of the plugin. (**t
 
 All plugins must expose a variable named `P` which implements the Runner interface
 
+Plugin mainly has 4 methods: `Enable`, `Disable`, `Status` and `Run`. `Run` is the **only** asynchronous method. disabling a plugin has no effect on previously started tasks but all queued tasks will fail.
+
 ### API
 
 /
@@ -40,7 +42,12 @@ Worker won't start unless it successfully connects to database. environment vari
 
 `DB_NAME` is the database name. Default: `test_db`
 
-`DB_PORT` is the port to cennect to. Default: `5432`
+`DB_PORT` is the port to connect to. Default: `5432`
+
+### tasks
+
+POST request to /plugins/execute/{plugin} will start a goroutine to execute the command.
+Later calls to this route will cause the previous results to be lost and it's caller's responsibility to get the latest result before performing subsequent tasks.
 
 ---
 
