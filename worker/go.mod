@@ -5,8 +5,9 @@ go 1.13
 require (
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/alexedwards/argon2id v0.0.0-20190612080829-01a59b2b8802
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fasthttp-contrib/websocket v0.0.0-20160511215533-1f3b11f56072 // indirect
-	github.com/go-cmd/cmd v1.2.0 // indirect
+	github.com/go-cmd/cmd v1.2.0
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/imkira/go-interpol v1.1.0 // indirect
 	github.com/iris-contrib/middleware/jwt v0.0.0-20191219204441-78279b78a367
