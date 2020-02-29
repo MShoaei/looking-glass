@@ -1,0 +1,36 @@
+version: "3.7"
+
+services:
+  db:
+    image: postgres:11-alpine
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: "testpassword"
+      POSTGRES_USER: "test"
+      POSTGRES_DB: "test_db"
+    volumes:
+      - "./database/db.sql:/docker-entrypoint-initdb.d/db.sql"
+    ports:
+      - "5432:5432"
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+
+  worker:
+    image: "worker:dev"
+    build:
+      context: "./worker"
+    depends_on:
+      - db
+
+  master:
+    image: "master:dev"
+    build:
+      context: "./master"
+    ports:
+      - "9090:9090"
