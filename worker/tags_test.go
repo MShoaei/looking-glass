@@ -1,9 +1,10 @@
 package main
 
 import (
+	"testing"
+
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/httptest"
-	"testing"
 )
 
 func Test_tagHandlers(t *testing.T) {

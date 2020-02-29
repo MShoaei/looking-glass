@@ -1,9 +1,10 @@
 package main
 
 import (
+	"testing"
+
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/httptest"
-	"testing"
 )
 
 func Test_pluginHandlers(t *testing.T) {
@@ -45,7 +46,15 @@ func Test_pluginHandlers(t *testing.T) {
 		WithHeader("Authorization", token).
 		WithJSON(iris.Map{
 			"params": []string{"Hello Test"},
-		}).Expect().Status(iris.StatusOK).Body().Contains("Hello Test")
+		}).Expect().Status(iris.StatusAccepted).JSON().Object().Value("message").Equal("success")
+
+	e.GET("/task/status").
+		WithHeader("Authorization", token).
+		Expect().Status(iris.StatusOK).JSON().Object().Value("cmdStatus").NotEqual("failed")
+	e.GET("/task/result").
+		WithHeader("Authorization", token).
+		Expect().Status(iris.StatusOK)
+
 	e.POST("/plugins/execute/testPlugin").
 		WithHeader("Authorization", token).
 		WithBytes([]byte(`{"params":["Hello","Test"]`)).

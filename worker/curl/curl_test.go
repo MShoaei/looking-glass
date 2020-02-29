@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"strings"
 	"testing"
 )
@@ -69,7 +68,7 @@ func TestPlugin_Run(t *testing.T) {
 		wantStderr string
 		wantErr    bool
 	}{
-		{name: "empty enabled", fields: fields{enabled: true}, args: args{params: nil}, wantStdout: "", wantStderr: "curl: try 'curl --help'", wantErr: true},
+		{name: "empty enabled", fields: fields{enabled: true}, args: args{params: nil}, wantStdout: "", wantStderr: "curl: try 'curl --help'", wantErr: false},
 		{name: "empty disabled", fields: fields{enabled: false}, args: args{params: nil}, wantStdout: "", wantStderr: "", wantErr: true},
 		{name: "Hello", fields: fields{enabled: true}, args: args{params: []string{"--version"}}, wantStdout: "curl", wantStderr: "", wantErr: false},
 		{name: "transmit", fields: fields{enabled: true}, args: args{params: []string{"google.com"}}, wantStdout: "<HTML><HEAD>", wantStderr: "", wantErr: false},
@@ -79,18 +78,19 @@ func TestPlugin_Run(t *testing.T) {
 			p := &Plugin{
 				enabled: tt.fields.enabled,
 			}
-			stdout := &bytes.Buffer{}
-			stderr := &bytes.Buffer{}
-			err := p.Run(stdout, stderr, tt.args.params...)
+			c, err := p.Run(tt.args.params...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if gotStdout := stdout.String(); !strings.Contains(gotStdout, tt.wantStdout) {
-				t.Errorf("Run() gotStdout = %v, want %v", gotStdout, tt.wantStdout)
-			}
-			if gotStderr := stderr.String(); !strings.Contains(gotStderr, tt.wantStderr) {
-				t.Errorf("Run() gotStderr = %v, want %v", gotStderr, tt.wantStderr)
+			if c != nil {
+				<-c.Start()
+				if gotStdout := strings.Join(c.Status().Stdout, "\n"); !strings.Contains(gotStdout, tt.wantStdout) {
+					t.Errorf("Run() gotStdout = %v, want %v", gotStdout, tt.wantStdout)
+				}
+				if gotStderr := strings.Join(c.Status().Stderr, "\n"); !strings.Contains(gotStderr, tt.wantStderr) {
+					t.Errorf("Run() gotStderr = %v, want %v", gotStderr, tt.wantStderr)
+				}
 			}
 		})
 	}

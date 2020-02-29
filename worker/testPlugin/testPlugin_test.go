@@ -1,8 +1,7 @@
 package main
 
 import (
-	"bytes"
-	"strings"
+	"reflect"
 	"testing"
 )
 
@@ -65,31 +64,33 @@ func TestPlugin_Run(t *testing.T) {
 		name       string
 		fields     fields
 		args       args
-		wantStdout string
-		wantStderr string
+		wantStdout []string
+		wantStderr []string
 		wantErr    bool
 	}{
-		{name: "empty enabled", fields: fields{enabled: true}, args: args{params: nil}, wantStdout: "", wantStderr: "", wantErr: false},
-		{name: "empty disabled", fields: fields{enabled: false}, args: args{params: nil}, wantStdout: "", wantStderr: "", wantErr: true},
-		{name: "Hello", fields: fields{enabled: true}, args: args{params: []string{"Hello"}}, wantStdout: "Hello", wantStderr: "", wantErr: false},
+		{name: "empty enabled", fields: fields{enabled: true}, args: args{params: nil}, wantStdout: []string{""}, wantStderr: []string{}, wantErr: false},
+		{name: "empty disabled", fields: fields{enabled: false}, args: args{params: nil}, wantStdout: []string{}, wantStderr: []string{}, wantErr: true},
+		{name: "Hello enabled", fields: fields{enabled: true}, args: args{params: []string{"Hello"}}, wantStdout: []string{"Hello"}, wantStderr: []string{}, wantErr: false},
+		{name: "Hello disabled", fields: fields{enabled: false}, args: args{params: []string{"Hello"}}, wantStdout: []string{}, wantStderr: []string{}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := &Plugin{
 				enabled: tt.fields.enabled,
 			}
-			stdout := &bytes.Buffer{}
-			stderr := &bytes.Buffer{}
-			err := p.Run(stdout, stderr, tt.args.params...)
+			c, err := p.Run(tt.args.params...)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)
+				t.Fatalf("Run() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if gotStdout := strings.TrimSpace(stdout.String()); tt.wantStdout != gotStdout {
-				t.Errorf("Run() gotStdout = %v, want %v", gotStdout, tt.wantStdout)
-			}
-			if gotStderr := strings.TrimSpace(stderr.String()); tt.wantStderr != gotStderr {
-				t.Errorf("Run() gotStderr = %v, want %v", gotStderr, tt.wantStderr)
+			if c != nil {
+				<-c.Start()
+				if gotStdout := c.Status().Stdout; !reflect.DeepEqual(tt.wantStdout, gotStdout) {
+					t.Errorf("Run() gotStdout = %v, want %v", gotStdout, tt.wantStdout)
+				}
+				if gotStderr := c.Status().Stderr; !reflect.DeepEqual(tt.wantStderr, gotStderr) {
+					t.Errorf("Run() gotStderr = %v, want %v", gotStderr, tt.wantStderr)
+				}
 			}
 		})
 	}
