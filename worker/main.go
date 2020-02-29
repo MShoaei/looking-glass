@@ -1,15 +1,14 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"os/exec"
 	"time"
 
 	"github.com/alexedwards/argon2id"
+	"github.com/go-cmd/cmd"
 	"github.com/iris-contrib/middleware/jwt"
 	"github.com/jmoiron/sqlx"
 	"github.com/kataras/iris/v12"
@@ -23,7 +22,7 @@ var db *sqlx.DB
 
 // Runner interface is the interface that plugins should implement
 type Runner interface {
-	Run(stdout io.Writer, stderr io.Writer, params ...string) error
+	Run(params ...string) (*cmd.Cmd, error)
 	Disable()
 	Enable()
 	Status() bool
@@ -60,6 +59,11 @@ func registerAPI() *iris.Application {
 	tagsParty.Get("/", getTagsHandler)
 	tagsParty.Put("/{tag:string}", addTagHandler)
 	tagsParty.Delete("/{tag:string}", deleteTagHandler)
+
+	taskParty := api.Party("/task")
+	taskParty.Get("/status", taskStatusHandler)
+	taskParty.Get("/result", taskResultHandler)
+
 	return api
 }
 
@@ -78,7 +82,7 @@ func loginHandler(context iris.Context) {
 	}
 
 	data := struct {
-		ID       int    `db:"id"`
+		ID       uint64 `db:"id"`
 		Password string `db:"password"`
 	}{}
 	if err := db.Get(&data, "SELECT id, password FROM users WHERE username=$1", cred.Username); err != nil {
@@ -126,9 +130,9 @@ func homeHandler(context iris.Context) {
 }
 
 func init() {
-	cmd := exec.Command("sh", "-c", "./run.sh")
-	if err := cmd.Run(); err != nil {
-		panic(err)
+	command := exec.Command("sh", "-c", "./run.sh")
+	if err := command.Run(); err != nil {
+		log.Fatalf("%v", err)
 	}
 	secret = []byte(os.Getenv("SECRET"))
 	if len(secret) == 0 {
@@ -161,14 +165,13 @@ func init() {
 		i   = 1
 	)
 	for {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(i*2)*time.Second)
-		db, err = sqlx.ConnectContext(ctx, "postgres",
-			fmt.Sprintf("user=%s password=%s dbname=%s port=%s sslmode=disable", user, password, dbname, dbport))
+		time.Sleep(time.Duration(i*2) * time.Second)
+		db, err = sqlx.Connect("postgres",
+			fmt.Sprintf("postgres://%s:%s@localhost:%s/%s?sslmode=disable", user, password, dbport, dbname))
 		if err == nil {
 			break
 		}
 		log.Printf("failed with error: %v", err)
 		i++
-		cancel()
 	}
 }

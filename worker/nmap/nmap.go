@@ -2,8 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"os/exec"
+	"github.com/go-cmd/cmd"
 )
 
 type Plugin struct {
@@ -15,18 +14,15 @@ var P = Plugin{
 	enabled: false,
 }
 
-func (p *Plugin) Run(stdout, stderr io.Writer, params ...string) (err error) {
+func (p *Plugin) Run(params ...string) (*cmd.Cmd, error) {
 	if !p.enabled {
-		return fmt.Errorf("plugin ping is disabled")
+		return nil, fmt.Errorf("plugin nmap is disabled")
 	}
-	c := exec.Command("nmap", params...)
-	c.Stdout = stdout
-	c.Stderr = stderr
-	err = c.Run()
-	if err != nil {
-		return fmt.Errorf("command \"nmap\" finished with error %v", err)
-	}
-	return nil
+	c := cmd.NewCmdOptions(cmd.Options{
+		Buffered:  true,
+		Streaming: true,
+	}, "nmap", params...)
+	return c, nil
 }
 
 func (p *Plugin) Enable() {

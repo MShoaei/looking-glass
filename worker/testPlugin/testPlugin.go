@@ -2,8 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"os/exec"
+	"github.com/go-cmd/cmd"
 )
 
 type Plugin struct {
@@ -15,18 +14,15 @@ var P = Plugin{
 	enabled: false,
 }
 
-func (p *Plugin) Run(stdout, stderr io.Writer, params ...string) (err error) {
+func (p *Plugin) Run(params ...string) (*cmd.Cmd, error) {
 	if !p.enabled {
-		return fmt.Errorf("plugin echo is disabled")
+		return nil, fmt.Errorf("plugin echo is disabled")
 	}
-	c := exec.Command("echo", params...)
-	c.Stdout = stdout
-	c.Stderr = stderr
-	err = c.Run()
-	if err != nil {
-		return fmt.Errorf("command \"echo\" finished with error: %v", err)
-	}
-	return nil
+	c := cmd.NewCmdOptions(cmd.Options{
+		Buffered:  true,
+		Streaming: true,
+	}, "echo", params...)
+	return c, nil
 }
 
 func (p *Plugin) Enable() {
