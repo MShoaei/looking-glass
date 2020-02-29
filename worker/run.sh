@@ -1,4 +1,4 @@
 #! /bin/sh
 for dir in ./*/; do
-  cd "$dir" && go build -buildmode=plugin . && cd ..
+  cd "$dir" && rm ./*.so; go build -buildmode=plugin . && cd ..
 done
