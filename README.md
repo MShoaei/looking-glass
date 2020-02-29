@@ -30,6 +30,18 @@ All plugins must expose a variable named `P` which implements the Runner interfa
 
 /tags
 
+### Database
+
+Worker won't start unless it successfully connects to database. environment variables SHOULD be set or default values will be used
+
+`DB_USER` is the username used to connect to database. Default: `test`
+
+`DB_PASSWORD` is the password used to connect to database. Default: `testpassword`
+
+`DB_NAME` is the database name. Default: `test_db`
+
+`DB_PORT` is the port to cennect to. Default: `5432`
+
 ---
 
 ## Master
