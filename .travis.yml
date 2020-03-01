@@ -1,0 +1,14 @@
+dist: bionic
+lanuage: go
+go:
+  - "1.13.x"
+
+services:
+  - docker
+  
+before_install:
+  - sudo apt update
+  - sudo apt install -y nmap curl traceroute
+  - docker run -d -p 127.0.0.1:5432:5432 -v "./database/db.sql:/docker-entrypoint-initdb.d/db.sql" postgres:11-alpine 
+
+script: go mod download && go test -v ./...
