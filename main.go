@@ -143,35 +143,9 @@ func init() {
 		port = ":" + p
 	}
 
-	user := os.Getenv("DB_USER")
-	if user == "" {
-		user = "test"
-	}
-	password := os.Getenv("DB_PASSWORD")
-	if password == "" {
-		password = "testpassword"
-	}
-	dbname := os.Getenv("DB_NAME")
-	if dbname == "" {
-		dbname = "test_db"
-	}
-	dbport := os.Getenv("DB_PORT")
-	if dbname == "" {
-		dbname = "5432"
-	}
-
-	var (
-		err error
-		i   = 1
-	)
-	for {
-		time.Sleep(time.Duration(i*2) * time.Second)
-		db, err = sqlx.Connect("postgres",
-			fmt.Sprintf("postgres://%s:%s@localhost:%s/%s?sslmode=disable", user, password, dbport, dbname))
-		if err == nil {
-			break
-		}
-		log.Printf("failed with error: %v", err)
-		i++
+	var err error
+	db, err = sqlx.Open("postgres", os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Fatal(err)
 	}
 }
