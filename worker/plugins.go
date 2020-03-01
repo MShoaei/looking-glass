@@ -2,13 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
-	"log"
 	"path"
 	"plugin"
 	"strings"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/kataras/iris/v12"
 )
 
@@ -124,7 +123,6 @@ func executeHandler(context iris.Context) {
 		})
 		return
 	case tasksChan <- c:
-		log.Println("Running")
 		tasksMap[userID] = c
 		go taskRunner()
 		context.StatusCode(iris.StatusAccepted)

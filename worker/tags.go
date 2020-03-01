@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/kataras/iris/v12"
 	"strings"
+
+	"github.com/kataras/iris/v12"
 )
 
 func getTagsHandler(context iris.Context) {
