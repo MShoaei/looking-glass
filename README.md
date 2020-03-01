@@ -24,25 +24,99 @@ Plugin mainly has 4 methods: `Enable`, `Disable`, `Status` and `Run`. `Run` is t
 
 /
 
+    requset: GET
+    response: 302 Redirect
+
 /home
 
+    request: GET 
+    response: application/json 200 OK
+    body: {
+      message string
+    }
+
 /login
+  
+    request: POST application/json
+    body: {
+      username string
+      password string
+    }
+    response: application/json 200 OK 
+    body: {
+      Authorization string
+    }
 
 /plugins
 
+- status/{plugin}
+
+      request: GET
+      response: application/json 200 OK
+      body: {
+        pluginStatus string
+      }
+
+- enable/{plugin}
+
+      request: POST application/json
+      response: application/json 200 OK
+      body: {
+        success bool
+      }
+
+- disable/{plugin}
+
+      request: POST application/json
+      response: application/json 200 OK
+      body: {
+        success bool
+      }
+
 /tags
+
+- /
+
+      request: GET
+      response: application/json 200 OK
+      body: {
+        tags []string
+      }
+
+- /{tag}
+
+      request: PUT
+      response: application/json 200 OK
+      body: {
+        message string
+      }
+
+- /{tag}
+
+      request: DELETE
+      response: application/json 204 OK
+
+/task
+
+- /status
+
+      request: GET
+      response: application/json 200 OK
+      body: {
+        cmdStatus string
+      }
+
+- /result
+
+      request: GET
+      response: application/json 200 OK
+      body: {
+        result result
+      }
 
 ### Database
 
-Worker won't start unless it successfully connects to database. environment variables SHOULD be set or default values will be used
-
-`DB_USER` is the username used to connect to database. Default: `test`
-
-`DB_PASSWORD` is the password used to connect to database. Default: `testpassword`
-
-`DB_NAME` is the database name. Default: `test_db`
-
-`DB_PORT` is the port to connect to. Default: `5432`
+Worker won't start unless it successfully connects to database. environment variables `DATABASE_URL` MUST be set.
 
 ### tasks
 
@@ -85,7 +159,3 @@ Statistics        Avg      Stdev        Max
     others - 0
   Throughput:    14.29MB/s
 ```
-
----
-
-## Master
