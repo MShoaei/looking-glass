@@ -1,4 +1,6 @@
 #! /bin/sh
+find . -name "*.so" -exec rm '{}' \;
 for dir in ./*/; do
-  cd "$dir" && rm ./*.so; go build -buildmode=plugin . && cd ..
+  cd $(git rev-parse --show-toplevel)
+  cd "$dir" && go build -buildmode=plugin . && cd ..
 done
