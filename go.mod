@@ -1,3 +1,6 @@
+// +heroku goVersion go1.13
+// +heroku install .
+
 module github.com/MShoaei/looking-glass/worker
 
 go 1.13

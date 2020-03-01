@@ -1,1 +1,1 @@
-web: ./worker
+web: worker
