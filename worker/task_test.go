@@ -14,7 +14,7 @@ func Test_taskHandlers(t *testing.T) {
 		Password string
 	}
 	e := httptest.New(t, app)
-	token = e.POST("/login").WithJSON(&cred{Username: "admin", Password: "testadminpassword"}).Expect().JSON().Object().Value("token").String().Raw()
+	token = e.POST("/login").WithJSON(&cred{Username: "admin4", Password: "testadminpassword"}).Expect().JSON().Object().Value("token").String().Raw()
 
 	e.GET("/task/status").
 		WithHeader("Authorization", token).

@@ -17,7 +17,7 @@ func Test_homeHandler(t *testing.T) {
 		Password string
 	}
 	e := httptest.New(t, app)
-	token = e.POST("/login").WithJSON(&cred{Username: "admin", Password: "testadminpassword"}).Expect().JSON().Object().Value("token").String().Raw()
+	token = e.POST("/login").WithJSON(&cred{Username: "admin1", Password: "testadminpassword"}).Expect().JSON().Object().Value("token").String().Raw()
 	e.GET("/").Expect().Status(iris.StatusUnauthorized)
 	e.GET("/home").Expect().Status(iris.StatusUnauthorized)
 
@@ -38,8 +38,8 @@ func Test_loginHandler(t *testing.T) {
 	e := httptest.New(t, app)
 	e.POST("/login").Expect().Status(iris.StatusBadRequest)
 	e.POST("/login").WithJSON(&cred{Username: "not_user", Password: "testadminpassword"}).Expect().Status(iris.StatusNotFound).JSON().Object().Value("error").String().Equal("user not found")
-	e.POST("/login").WithJSON(&cred{Username: "admin", Password: "incorrect password"}).Expect().Status(iris.StatusUnauthorized).JSON().Object().Value("error").String().Equal("incorrect password")
-	e.POST("/login").WithJSON(&cred{Username: "admin", Password: "testadminpassword"}).Expect().Status(iris.StatusOK).JSON().Object().Value("token").String().Contains("Bearer")
+	e.POST("/login").WithJSON(&cred{Username: "admin1", Password: "incorrect password"}).Expect().Status(iris.StatusUnauthorized).JSON().Object().Value("error").String().Equal("incorrect password")
+	e.POST("/login").WithJSON(&cred{Username: "admin1", Password: "testadminpassword"}).Expect().Status(iris.StatusOK).JSON().Object().Value("token").String().Contains("Bearer")
 
 }
 
@@ -50,7 +50,7 @@ func Test_registerAPI(t *testing.T) {
 		Password string
 	}
 	e := httptest.New(t, app)
-	token = e.POST("/login").WithJSON(&cred{Username: "admin", Password: "testadminpassword"}).Expect().JSON().Object().Value("token").String().Raw()
+	token = e.POST("/login").WithJSON(&cred{Username: "admin1", Password: "testadminpassword"}).Expect().JSON().Object().Value("token").String().Raw()
 
 	e.GET("/").
 		WithHeader("Authorization", token).

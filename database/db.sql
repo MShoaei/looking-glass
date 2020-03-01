@@ -6,5 +6,14 @@ CREATE TABLE users
 );
 
 INSERT INTO users(username, password)
-VALUES ('admin',
+VALUES ('admin1',
+        '$argon2id$v=19$m=65536,t=3,p=2$UDQbl6KSK7h0nzhb/eAAtw$e3ZT9jPEprmoP1A40wD04a5s0J5/2otW1gOdny5M9/E'); -- admin, testadminpassword
+INSERT INTO users(username, password)
+VALUES ('admin2',
+        '$argon2id$v=19$m=65536,t=3,p=2$UDQbl6KSK7h0nzhb/eAAtw$e3ZT9jPEprmoP1A40wD04a5s0J5/2otW1gOdny5M9/E'); -- admin, testadminpassword
+INSERT INTO users(username, password)
+VALUES ('admin3',
+        '$argon2id$v=19$m=65536,t=3,p=2$UDQbl6KSK7h0nzhb/eAAtw$e3ZT9jPEprmoP1A40wD04a5s0J5/2otW1gOdny5M9/E'); -- admin, testadminpassword
+INSERT INTO users(username, password)
+VALUES ('admin4',
         '$argon2id$v=19$m=65536,t=3,p=2$UDQbl6KSK7h0nzhb/eAAtw$e3ZT9jPEprmoP1A40wD04a5s0J5/2otW1gOdny5M9/E'); -- admin, testadminpassword

@@ -14,7 +14,7 @@ func Test_tagHandlers(t *testing.T) {
 		Password string
 	}
 	e := httptest.New(t, app)
-	token = e.POST("/login").WithJSON(&cred{Username: "admin", Password: "testadminpassword"}).Expect().JSON().Object().Value("token").String().Raw()
+	token = e.POST("/login").WithJSON(&cred{Username: "admin3", Password: "testadminpassword"}).Expect().JSON().Object().Value("token").String().Raw()
 
 	e.GET("/tags").
 		WithHeader("Authorization", token).
